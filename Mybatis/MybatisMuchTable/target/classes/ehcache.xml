@@ -1,0 +1,36 @@
+<ehcache>
+
+    <!--缓存满时存放的临时文件目录，可以自己设置路径-->
+    <diskStore path="java.io.tmpdir"/>
+
+
+    <!--
+    maxElementsInMemory:在内存中最大的存储量
+    eternal:是否在内存中永不销毁
+    timeToIdleSeconds:在缓存中限制多少时间之后销毁，默认单位是s
+    timeToLiveSeconds：在缓存中存货多长时间之后销毁，无论是否有人使用，默认单位是s
+    overflowToDisk：当缓存满的时候时候保存到磁盘中
+    diskPersistent：磁盘中的文件是否永远保存
+    diskExpiryThreadIntervalSeconds：检测线程运行时间间隔，默认单位是s
+
+    memoryStoreEvictionPolicy：缓存清理策略
+    1. LRU(Least recently  used)：最近最少使用策略
+        每个缓存的元素都有一个时间戳。当缓存容量满的时候，需要腾出新位置给新缓存元素
+        这时候就会比较时间戳然后删除符合条件的缓存元素。
+    2. LFU(Last  frequently used)最少使用策略
+        一直以来最少使用的缓存元素，缓存元素中有一个hit值，hit值最少的将会清除
+    3. FIFO(first in first out )先进先出
+
+    -->
+
+    <defaultCache
+            maxElementsInMemory="10000"
+            eternal="false"
+            timeToIdleSeconds="120"
+            timeToLiveSeconds="120"
+            overflowToDisk="true"
+            diskPersistent="false"
+            diskExpiryThreadIntervalSeconds="120"
+            memoryStoreEvictionPolicy="LRU"
+            />
+</ehcache>

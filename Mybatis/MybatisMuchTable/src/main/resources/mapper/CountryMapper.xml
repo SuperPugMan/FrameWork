@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ypf.dao.CountryDao">
+    <!--不使用延迟加载方式，直接对应collection的数据库对应名-->
+    <!--    <select id="selectCountByCId" resultMap="countryMap">
+            select cid.cname,pid.pname from country c,provincial p
+            where c.cid=p.countryid
+            and c.cid=#{ddd}
+        </select>
+        <resultMap id="countryMap" type="Country">
+            <id property="cId" column="cid"></id>
+            <result property="cName" column="cname"></result>
+            <collection property="procvincials" ofType="Provincial">
+                <id property="pId" column="pid"></id>
+                <result property="pName" column="pname"></result>
+            </collection>
+        </resultMap>-->
+
+    <!--一个国家对应多个省，一对多延迟加载-->
+    <!--使用延迟加载方式，在resultMap中指向另一条select查询语句。-->
+    <select id="selectCountByCId" resultMap="countryMap">
+        select cid,cname from country
+        where cid=#{ddd}
+    </select>
+    <select id="selectProvincialByCId" resultType="Provincial">
+        select pid,pname from provincial
+         where countryid=#{eee}
+    </select>
+    <resultMap id="countryMap" type="Country">
+        <id property="cId" column="cid"></id>
+        <result property="cName" column="cname"></result>
+        <!--在resultMap中的collection中指定另外查询的sql语句的id，并指定参数cid-->
+        <collection property="procvincials" ofType="Provincial" select="selectProvincialByCId"
+                    column="cid"></collection>
+    </resultMap>
+
+
+    <!--只查询id对应的省会信息-->
+    <select id="selectByProvincalId" resultMap="provincalMap">
+        select pid,pname,countryid from provincial where pid=#{sd}
+    </select>
+
+    <!--只查询国家-->
+    <select id="selectCountryById" resultType="Country">
+        select cid,cname from country where cid=#{sd}
+    </select>
+    <!--对应的resultMap-->
+    <resultMap id="provincalMap" type="Provincial">
+        <id property="pId" column="pid"/>
+        <result property="pName" column="pname"></result>
+        <!--域属性-->
+        <association property="country" javaType="Country" select="selectCountryById" column="countryId"></association>
+    </resultMap>
+
+
+    <!--验证一级缓存查询-->
+    <select id="selectCountryById2" resultType="Country">
+        select cname from country where cid=#{dsd}
+    </select>
+
+    <!--增删改对一级缓存的影响-->
+    <insert id="executeCountry" parameterType="Country">
+        insert into country (cId,cname) VALUE (#{cId},#{cName})
+    </insert>
+</mapper>

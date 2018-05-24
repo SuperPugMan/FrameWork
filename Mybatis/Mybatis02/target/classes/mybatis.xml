@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <!--加载properties文件，连接数据库四要素-->
+    <properties resource="jdbc.properties"/>
+
+    <!--设置懒加载-->
+    <settings>
+        <!--开启延迟加载-->
+        <setting name="lazyLoadingEnabled" value="true"></setting>
+        <!--关闭积极加载-->
+        <setting name="aggressiveLazyLoading" value="false"></setting>
+    </settings>
+
+    <!--创建类的别名-->
+    <typeAliases>
+        <!--只要是在mapper.xml文件中使用了com.xdf.bean包下面的任意类的时候，无需再用全类名
+       使用简写的类名
+         之前应该 com.xdf.bean.Student
+         现在  Student
+       -->
+
+        <package name="com.ypf.bean"/>
+        <!--别名还有一种写法，但是如果有多个类，使用不方便-->
+        <!--<typeAlias type="com.ypf.bean" alias="s"></typeAlias>-->
+    </typeAliases>
+
+    <!--设置mybatis运行环境，default-默认的运行环境，environment的id属性-->
+    <!--environments中可以有多个environment但是必须有一个默认的-->
+    <environments default="mysql">
+        <environment id="mysql">
+            <!--配置事务管理器，现阶段mybatis自己采用jdbc事务管理，
+            后期整合会交给Spring进行管理。-->
+            <transactionManager type="JDBC"/>
+            <!--配置数据源，POOLED为mybatis自带的数据源，也可以使用JNDI/DBCP/C3P0-->
+            <!--从jdbc.properties文件中获取数据库连接的四要素，注入到数据源中-->
+            <dataSource type="POOLED">
+                <property name="driver" value="${jdbc.driver}"/>
+                <property name="url" value="${jdbc.url}"/>
+                <property name="username" value="${jdbc.username}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <!--需要的mapper文件-->
+    <mappers>
+        <mapper resource="mapper/StudentMapper.xml"/>
+        <mapper resource="mapper/CountryMapper.xml"/>
+    </mappers>
+
+</configuration>

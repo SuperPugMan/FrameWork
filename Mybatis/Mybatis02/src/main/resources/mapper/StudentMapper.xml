@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ypf.dao.StudentDao">
+    <!--新增数据，节点insert。id与dao接口的方法名相同-->
+    <insert id="addStudent" parameterType="Student">
+        INSERT  INTO  student(`studentNo`,`telphone`) VALUES (#{studentNo},#{phone})
+    </insert>
+
+    <!--    新增操作，获取插入数据的ID：
+        select @@iaentity
+        select last_insert_id() 查询刚插入的主键-->
+    <insert id="addStudentByCache" parameterType="Student">
+        INSERT into student(studentNo,telphone) values(#{studentNo},#{phone})
+        /*order="after"适用于mysql数据库,因为mysql是先插入数据库再有id
+        order="before" 适用于oracle，因为oracle是先有id再插入数据库*/
+        <selectKey resultType="int" keyProperty="studentId" order="AFTER">
+            SELECT @@IDENTITY
+        </selectKey>
+    </insert>
+
+    <delete id="deleteStudent" parameterType="int">
+        DELETE  FROM  student WHERE studentNo=#{aa}
+    </delete>
+
+    <update id="updateStudent" parameterType="Student">
+        UPDATE  student SET telphone=#{phone},studentNo=#{studentNo} WHERE  studentId=#{studentId}
+    </update>
+
+    <select id="selectAllStudents" resultMap="studentMap">
+        SELECT  studentId,telphone,studentNo  from student
+    </select>
+
+    <!--查询所有的student  返回值是map
+      如果我们写的是resultType="map"
+      那么mybatis在底层会把我们的每个字段当成key
+      字段对象的值 是value！  这样不可行！
+      我们是想把某一个字段当成key!
+      整行数据（对象）当成value！
+      这时候就需要把resultType换成resultMap(结果映射)="映射的resultMap名称"
+      mybatis底层会进行拦截ResultSet!
+      然后根据我们在resultMap中的配置，
+      把对应的key和value封装到map集合中！
+    -->
+    <select id="selectAllMap" resultMap="studentMap">
+        select studentId ,studentNo,telphone from student
+    </select>
+    <!--指定对应的Map集合-->
+    <!--    何时会用到resultMap节点？？
+        数据库字段名与实体bean属性名不一致，必须使用
+        返回结果是map集合时，必须使用
+        关联映射、延迟加载，必须使用-->
+    <resultMap id="studentMap" type="Student">
+        <!--设置主键-->
+        <id property="studentId" column="studentId"></id>
+        <result property="phone" column="telphone"></result>
+        <result property="studentNo" column="studentNo"></result>
+    </resultMap>
+
+    <select id="selectStudentBuId" parameterType="int" resultMap="studentMap">
+      SELECT studentId,studentNo,telphone from student where studentId=#{ac}
+    </select>
+
+    <select id="selectById" parameterType="int" resultMap="studentMap">
+        select studentId,studentNo,telphone from student where studentId like "%"||#{studentId}||"%"
+    </select>
+
+    <!--我们在前台表单中  有三个输入框
+    用户输入了几个条件我们不知道，所以多条件模糊查询时应该这样写-->
+    <select id="selectByMap" resultType="Student">
+            select studentNo,telphone,studentId from student
+            where telphone like concat('%',#{telphone},'%')
+            and  studentId like concat('%',#{studentId},'%')
+        </select>
+
+    <!--    <select id="selectByMap" resultMap="studentMap" parameterType="Map">
+                    select studentNo,telphone,studentId from student
+                    where telphone like concat('%',#{studentNo},'%')
+                    and studentId like concat('%',#{stu.studentId},'%')
+            </select>-->
+
+    <!--按照参数的下表进行封装 下标从0开始-->
+    <select id="selectStudentByCondition" resultType="Student">
+        select studentNo,telphone,studentId from student
+        where telphone like concat('%',#{0},'%')
+        and studentNo like concat('%',#{1},'%')
+    </select>
+    <!--按照参数的下表进行封装 下标从0开始-->
+    <select id="selectStudentByConditionTwo" resultType="Student">
+        select studentNo,telphone,studentId from student
+        where telphone like concat('%',#{phone},'%')
+        and studentNo like concat('%',#{studentId },'%')
+    </select>
+
+    <!--if标签的使用-->
+    <select id="selectAllUserByIf" resultMap="studentMap">
+        select studentNo,studentid,telphone from student where 1=1
+        <if test="studentNo!=null and studentNo!=''">
+            and studentNo like concat('%',#{studentNo },'%')
+        </if>
+        <if test="studentId!=null and studentId!=''">
+            and studentid like concat('%',#{studentId},'%')
+        </if>
+        <if test="phone!=null and phone!=''">
+            and telphone like concat('%',#{phone},'%')
+        </if>
+    </select>
+
+    <!--where标签的使用-->
+    <select id="selectAllUserBuWhere" resultMap="studentMap">
+        select studentNo,studentId,telphone from student
+        <where>
+            <if test="studentNo!=null and studentNo!=''">
+                and studentNo like concat('%',#{studentNo },'%')
+            </if>
+            <if test="studentId!=null and studentId!=''">
+                and studentid like concat('%',#{studentId},'%')
+            </if>
+            <if test="phone!=null and phone!=''">
+                and telphone like concat('%',#{phone},'%')
+            </if>
+        </where>
+    </select>
+
+    <!--choose标间的使用，choose可以判断多种条件，if只能判断一个条件-->
+    <select id="selectAllUserByChoose" resultType="Student">
+        select studentNo,studentId,telphone from student
+        <where>
+            <choose>
+                <when test="studentNo!=null and studentNo!=''">
+                    and studentNo like concat('%',#{studentNo },'%')
+                </when>
+                <when test="studentId!=null and studentId!=''">
+                    and studentid like concat('%',#{studentId},'%')
+                </when>
+                <otherwise>
+                    telphone=18510783381
+                </otherwise>
+            </choose>
+
+        </where>
+    </select>
+
+    <!--foreach遍历数组，判断只能使用array-->
+    <select id="selectAllUserByArray" resultMap="studentMap">
+        SELECT studentNo,studentId from student
+        <if test="array.length>0">
+            where telphone in
+            <foreach collection="array" item="phone" open="(" separator="," close=")">
+                #{phone}
+            </foreach>
+        </if>
+    </select>
+
+    <!--foreach遍历List集合，判断List长度只能使用list.size-->
+    <select id="selectAllUserByList" resultMap="studentMap">
+        select studentNo,studentId from student
+        <if test="list.size>0">
+            where telphone IN
+            <foreach collection="list" item="phone" open="(" separator="," close=")">
+                #{phone}
+            </foreach>
+        </if>
+    </select>
+
+    <!--foreach遍历对象集合，判断和遍历List只能使用list，遍历出对象后可以使用.来.出属性-->
+    <select id="selectAllUserByUserList" resultMap="studentMap">
+        select studentNo,studentId from student
+        <if test="list.size>0">
+            where telphone IN
+            <foreach collection="list" item="stu" open="(" separator="," close=")">
+                #{stu.phone}
+            </foreach>
+        </if>
+    </select>
+
+    <!--foreach遍历Map时，遍历Map时，使用注释@Param("")时自己定义的参数名-->
+    <select id="selectAllUserByMap" resultMap="studentMap">
+        select studentNo,studentId from student
+        <if test="map.keys.size>0">
+            where telphone IN
+            <foreach collection="map.keys" item="key" open="(" separator="," close=")">
+                #{key}
+            </foreach>
+        </if>
+    </select>
+
+</mapper>
